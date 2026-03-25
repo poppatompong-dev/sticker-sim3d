@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full md:w-[400px] p-4 border-r border-gray-200 bg-gray-50 overflow-y-auto shadow-inner flex flex-col gap-5 no-scrollbar">
+  <div class="w-full md:w-[400px] h-full p-4 border-r border-gray-200 bg-gray-50 overflow-y-auto shadow-inner flex flex-col gap-5 no-scrollbar">
 
     <!-- Action buttons -->
     <div class="flex flex-col gap-2 pt-1">
@@ -38,11 +38,26 @@
           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-green-400 focus:outline-none">
       </div>
 
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">ข้อความรอง <span class="text-gray-400">(ว่างได้)</span></label>
-        <input type="text" :value="state.customSubText" @input="updateSubText($event.target.value)"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-green-400 focus:outline-none"
-          placeholder="เช่น กองช่าง / ฝ่ายโยธา">
+      <div class="flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <label class="block text-xs font-medium text-gray-600">ข้อความรอง</label>
+          <button v-if="state.subTexts.length < 4" @click="addSubText" class="text-xs text-green-600 hover:underline font-medium">+ เพิ่ม</button>
+        </div>
+        <div v-for="(st, idx) in state.subTexts" :key="idx" class="bg-gray-50 rounded-lg border border-gray-200 p-2.5 flex flex-col gap-1.5">
+          <div class="flex items-center gap-1.5">
+            <input type="text" :value="st.text" @input="updateSubText(idx, 'text', $event.target.value)"
+              class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs text-gray-700 focus:ring-1 focus:ring-green-400 focus:outline-none"
+              placeholder="เช่น กองช่าง / ฝ่ายโยธา">
+            <button v-if="state.subTexts.length > 1" @click="removeSubText(idx)" class="text-red-400 hover:text-red-600 text-xs font-bold px-1">✕</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-400 w-14">ขนาด</span>
+            <input type="range" min="28" max="120" step="2" :value="st.fontSize" @input="updateSubText(idx, 'fontSize', Number($event.target.value))"
+              class="flex-1 h-1.5 accent-green-600">
+            <span class="text-xs font-mono text-green-700 w-7 text-right">{{ st.fontSize }}</span>
+            <input type="color" :value="st.color" @input="updateSubText(idx, 'color', $event.target.value)" class="w-6 h-6 rounded cursor-pointer border border-gray-200 p-0">
+          </div>
+        </div>
       </div>
 
       <div>
@@ -59,6 +74,13 @@
       <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-1">
         <h2 class="text-sm font-bold text-gray-800">3. สี</h2>
         <button @click="resetColors" class="text-xs text-blue-500 hover:underline">รีเซ็ต</button>
+      </div>
+      <div class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
+        <span class="text-xs font-medium text-gray-700">สีตู้ (Cabinet)</span>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded border border-gray-300 shadow-inner" :style="{ background: state.cabinetColor }"></div>
+          <input type="color" :value="state.cabinetColor" @input="updateCabinetColor($event.target.value)" class="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5">
+        </div>
       </div>
       <div v-for="c in colorItems" :key="c.key" class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
         <span class="text-xs font-medium text-gray-700">{{ c.label }}</span>
@@ -113,7 +135,7 @@
 <script setup>
 import { state, fonts } from '../modules/state.js'
 import { renderTexture, applyMaterialEffect } from '../modules/texture.js'
-import { getRenderer } from '../modules/scene.js'
+import { getRenderer, setCabinetColor } from '../modules/scene.js'
 
 const emit = defineEmits(['open-export'])
 
@@ -149,13 +171,25 @@ function re() { renderTexture(state.currentStyleId, getRenderer()) }
 
 function updateCustomNum(v) { state.customNum = v; re() }
 function updateText(v) { state.customText = v; re() }
-function updateSubText(v) { state.customSubText = v; re() }
+function updateSubText(idx, field, val) {
+  state.subTexts[idx][field] = val; re()
+}
+function addSubText() {
+  if (state.subTexts.length < 4) {
+    state.subTexts.push({ text: '', fontSize: 56, color: '#1F2937' }); re()
+  }
+}
+function removeSubText(idx) {
+  state.subTexts.splice(idx, 1); re()
+}
 function updateFont(v) { state.selectedFont = v; re() }
+function updateCabinetColor(v) { state.cabinetColor = v; setCabinetColor(v) }
 function changeMaterial(m) { state.currentMaterial = m; applyMaterialEffect() }
 function updateColor(k, v) { state.COLORS[k] = v; re() }
 
 function resetColors() {
   state.COLORS.green = '#008542'; state.COLORS.red = '#DC2626'; state.COLORS.dark = '#1F2937'
+  state.cabinetColor = '#b0b5b9'; setCabinetColor('#b0b5b9')
   re()
 }
 
@@ -181,7 +215,7 @@ function resetAll() {
   if (!confirm('รีเซ็ตทั้งหมด?')) return
   state.customNum = '092'
   state.customText = 'เทศบาลเมืองอุทัยธานี'
-  state.customSubText = ''
+  state.subTexts = [{ text: '', fontSize: 56, color: '#1F2937' }]
   state.selectedFont = 'Sarabun'
   state.currentMaterial = 'matte'
   resetColors()

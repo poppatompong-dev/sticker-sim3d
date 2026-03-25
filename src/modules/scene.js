@@ -1,18 +1,29 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { setStickerMaterial } from './texture.js'
+import { addReferenceObjects, setRefsVisible, setHumanVisible, setGroundVisible, m2y } from './scaleRef.js'
 
-let scene, camera, renderer, controls
+let scene, camera, renderer, controls, cabBodyMaterial
+
+// ── Layout constants (single source of truth) ─────────────
+const GROUND_Y = -6          // Three.js Y of ground plane
+const SCALE = 12 / 7     // Three.js units per real metre (pole=12u=7m)
+const CAB_H = 3.6        // cabinet height in Three.js units
+const CAB_BOTTOM_M = 3.0       // cabinet bottom height above ground in metres
+const CAB_BOTTOM_Y = GROUND_Y + CAB_BOTTOM_M * SCALE   // = -6 + 5.143 = -0.857
+const CAB_CENTER_Y = CAB_BOTTOM_Y + CAB_H / 2          // = -0.857 + 1.8 = 0.943
+export const CAB_CENTER_M = CAB_BOTTOM_M + (CAB_H / 2) / SCALE // ≈ 4.05m real
 
 export function getRenderer() { return renderer }
 export function getScene() { return scene }
+export { setHumanVisible, setGroundVisible }
 
 export function initScene(container) {
   scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2(0xE0F6FF, 0.015)
 
-  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100)
-  camera.position.set(4, 2, 8)
+  camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.5, 80)
+  camera.position.set(3.5, CAB_CENTER_Y + 0.5, 7.5)
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
   renderer.setSize(container.clientWidth, container.clientHeight)
@@ -25,7 +36,7 @@ export function initScene(container) {
   controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
   controls.dampingFactor = 0.08
-  controls.target.set(0, 3, 0)
+  controls.target.set(0, CAB_CENTER_Y, 0)
 
   // ── Lighting ──────────────────────────────────────────────
   scene.add(new THREE.AmbientLight(0xffffff, 0.45))
@@ -54,9 +65,10 @@ export function initScene(container) {
   scene.add(camera)
 
   // ── Materials ────────────────────────────────────────────
+  cabBodyMaterial = new THREE.MeshStandardMaterial({ color: 0xb0b5b9, metalness: 0.45, roughness: 0.55 })
   const matMetal = new THREE.MeshStandardMaterial({ color: 0x8a9299, metalness: 0.45, roughness: 0.55 })
-  const matDark  = new THREE.MeshStandardMaterial({ color: 0x4a5158, metalness: 0.5,  roughness: 0.5  })
-  const matChrome = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.85, roughness: 0.2  })
+  const matDark = new THREE.MeshStandardMaterial({ color: 0x4a5158, metalness: 0.5, roughness: 0.5 })
+  const matChrome = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.85, roughness: 0.2 })
   const matGround = new THREE.MeshStandardMaterial({ color: 0x9aaa88, roughness: 0.9 })
 
   function mesh(geo, mat, cast = false, recv = false) {
@@ -136,33 +148,33 @@ export function initScene(container) {
 
   // ── Pole-to-cabinet bracket (horizontal arm) ─────────────
   const bracket = mesh(new THREE.BoxGeometry(0.36, 0.28, 1.1), matDark, true, false)
-  bracket.position.set(0, 4.4, 0.55)
+  bracket.position.set(0, CAB_BOTTOM_Y - 0.14, 0.55)
   scene.add(bracket)
 
   // ── Cabinet group (parented so sticker inherits transforms) ─
   const cabGroup = new THREE.Group()
-  cabGroup.position.set(0, 4.4, 1.1)
+  cabGroup.position.set(0, CAB_CENTER_Y, 1.1)
   scene.add(cabGroup)
 
   // Cabinet body
   const cabW = 2.6, cabH = 3.6, cabD = 1.1
-  const cabBody = mesh(new THREE.BoxGeometry(cabW, cabH, cabD), matMetal, true, true)
+  const cabBody = mesh(new THREE.BoxGeometry(cabW, cabH, cabD), cabBodyMaterial, true, true)
   cabBody.position.set(0, 0, 0)
   cabGroup.add(cabBody)
 
   // Door frame (thin raised border on front face)
   const frameW = cabW - 0.1, frameH = cabH - 0.1
   const frameMat = matDark.clone()
-  ;[
-    [frameW, 0.07, 0.06,  0,           cabH / 2 - 0.035,  cabD / 2 + 0.001], // top bar
-    [frameW, 0.07, 0.06,  0,          -cabH / 2 + 0.035,  cabD / 2 + 0.001], // bottom bar
-    [0.07, frameH, 0.06, -cabW / 2 + 0.035, 0,            cabD / 2 + 0.001], // left bar
-    [0.07, frameH, 0.06,  cabW / 2 - 0.035, 0,            cabD / 2 + 0.001], // right bar
-  ].forEach(([w, h, d, x, y, z]) => {
-    const f = mesh(new THREE.BoxGeometry(w, h, d), frameMat, false, false)
-    f.position.set(x, y, z)
-    cabGroup.add(f)
-  })
+    ;[
+      [frameW, 0.07, 0.06, 0, cabH / 2 - 0.035, cabD / 2 + 0.001], // top bar
+      [frameW, 0.07, 0.06, 0, -cabH / 2 + 0.035, cabD / 2 + 0.001], // bottom bar
+      [0.07, frameH, 0.06, -cabW / 2 + 0.035, 0, cabD / 2 + 0.001], // left bar
+      [0.07, frameH, 0.06, cabW / 2 - 0.035, 0, cabD / 2 + 0.001], // right bar
+    ].forEach(([w, h, d, x, y, z]) => {
+      const f = mesh(new THREE.BoxGeometry(w, h, d), frameMat, false, false)
+      f.position.set(x, y, z)
+      cabGroup.add(f)
+    })
 
   // ── Sticker plane ────────────────────────────────────────
   const stickerMat = new THREE.MeshStandardMaterial({
@@ -173,36 +185,36 @@ export function initScene(container) {
   sticker.position.set(0, 0, cabD / 2 + 0.008)
   cabGroup.add(sticker)
 
-  // ── Hinges (left side, 3 hinges) ─────────────────────────
+  // ── Hinges (right side, 3 hinges) ────────────────────────
   const hingePositions = [-1.1, 0, 1.1]
   hingePositions.forEach(yOff => {
     const hinge = mesh(new THREE.BoxGeometry(0.12, 0.26, 0.1), matChrome, true, false)
-    hinge.position.set(-cabW / 2 - 0.05, yOff, cabD / 2 + 0.02)
+    hinge.position.set(cabW / 2 + 0.05, yOff, cabD / 2 + 0.02)
     cabGroup.add(hinge)
   })
 
-  // ── Door handle (right side, vertical bar) ───────────────
+  // ── Door handle (left side, vertical bar) ───────────────
   // Handle backing plate
   const handleBase = mesh(new THREE.BoxGeometry(0.18, 0.72, 0.06), matDark, false, false)
-  handleBase.position.set(cabW / 2 - 0.22, 0, cabD / 2 + 0.03)
+  handleBase.position.set(-cabW / 2 + 0.22, 0, cabD / 2 + 0.03)
   cabGroup.add(handleBase)
 
   // Handle bar (chrome rod)
   const handleBar = mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.6, 12), matChrome, true, false)
-  handleBar.position.set(cabW / 2 - 0.22, 0, cabD / 2 + 0.1)
+  handleBar.position.set(-cabW / 2 + 0.22, 0, cabD / 2 + 0.1)
   cabGroup.add(handleBar)
 
-  // Handle end caps
-  ;[-0.28, 0.28].forEach(yOff => {
-    const cap = mesh(new THREE.SphereGeometry(0.055, 10, 10), matChrome, false, false)
-    cap.position.set(cabW / 2 - 0.22, yOff, cabD / 2 + 0.1)
-    cabGroup.add(cap)
-  })
+    // Handle end caps
+    ;[-0.28, 0.28].forEach(yOff => {
+      const cap = mesh(new THREE.SphereGeometry(0.055, 10, 10), matChrome, false, false)
+      cap.position.set(-cabW / 2 + 0.22, yOff, cabD / 2 + 0.1)
+      cabGroup.add(cap)
+    })
 
-  // Lock cylinder (below handle, center)
+  // Lock cylinder (below handle)
   const lock = mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 12), matChrome, false, false)
   lock.rotation.x = Math.PI / 2
-  lock.position.set(cabW / 2 - 0.22, -0.5, cabD / 2 + 0.065)
+  lock.position.set(-cabW / 2 + 0.22, -0.5, cabD / 2 + 0.065)
   cabGroup.add(lock)
 
   // ── Roof (overhang, slightly wider & deeper than cabinet) ─
@@ -219,25 +231,50 @@ export function initScene(container) {
   drip.position.set(0, cabH / 2 - 0.04, (roofD - cabD) / 2 + roofD / 2 - 0.02)
   cabGroup.add(drip)
 
-  // Roof side lips
-  ;[-1, 1].forEach(side => {
-    const lip = mesh(new THREE.BoxGeometry(0.04, 0.18, roofD), matDark, false, false)
-    lip.position.set(side * (roofW / 2 - 0.02), cabH / 2 - 0.04, (roofD - cabD) / 2)
-    cabGroup.add(lip)
-  })
+    // Roof side lips
+    ;[-1, 1].forEach(side => {
+      const lip = mesh(new THREE.BoxGeometry(0.04, 0.18, roofD), matDark, false, false)
+      lip.position.set(side * (roofW / 2 - 0.02), cabH / 2 - 0.04, (roofD - cabD) / 2)
+      cabGroup.add(lip)
+    })
+
+  addReferenceObjects(scene)
 
   animate()
 
-  window.addEventListener('resize', () => {
+  const ro = new ResizeObserver(() => {
     if (!camera || !renderer) return
-    camera.aspect = container.clientWidth / container.clientHeight
+    const w = container.clientWidth, h = container.clientHeight
+    if (w === 0 || h === 0) return
+    camera.aspect = w / h
     camera.updateProjectionMatrix()
-    renderer.setSize(container.clientWidth, container.clientHeight)
+    renderer.setSize(w, h)
   })
+  ro.observe(container)
 }
 
 function animate() {
   requestAnimationFrame(animate)
   controls.update()
   renderer.render(scene, camera)
+}
+
+const MODE_CONFIG = {
+  1: { pos: [3.5, CAB_CENTER_Y + 0.5, 7.5], target: [0, CAB_CENTER_Y, 0], refs: false },
+  2: { pos: [6, CAB_CENTER_Y, 10], target: [0, CAB_CENTER_Y, 0], refs: true },
+  3: { pos: [-5, m2y(1.6), 4], target: [0, CAB_CENTER_Y, 2], refs: true },
+}
+
+export function switchViewMode(mode) {
+  if (!camera || !controls) return
+  const cfg = MODE_CONFIG[mode]
+  if (!cfg) return
+  camera.position.set(...cfg.pos)
+  controls.target.set(...cfg.target)
+  controls.update()
+  setRefsVisible(cfg.refs)
+}
+
+export function setCabinetColor(hex) {
+  if (cabBodyMaterial) cabBodyMaterial.color.set(hex)
 }
