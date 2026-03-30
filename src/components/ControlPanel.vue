@@ -169,6 +169,15 @@ function scaleLabel(key) {
 
 function re() { renderTexture(state.currentStyleId, getRenderer()) }
 
+async function ensureFontReady(fontName) {
+  if (!document.fonts?.load) return
+  await Promise.all([
+    document.fonts.load(`400 48px "${fontName}"`),
+    document.fonts.load(`700 48px "${fontName}"`),
+    document.fonts.load(`900 72px "${fontName}"`),
+  ])
+}
+
 function updateCustomNum(v) { state.customNum = v; re() }
 function updateText(v) { state.customText = v; re() }
 function updateSubText(idx, field, val) {
@@ -182,7 +191,16 @@ function addSubText() {
 function removeSubText(idx) {
   state.subTexts.splice(idx, 1); re()
 }
-function updateFont(v) { state.selectedFont = v; re() }
+async function updateFont(v) {
+  state.selectedFont = v
+  re()
+  try {
+    await ensureFontReady(v)
+    requestAnimationFrame(() => re())
+  } catch {
+    requestAnimationFrame(() => re())
+  }
+}
 function updateCabinetColor(v) { state.cabinetColor = v; setCabinetColor(v) }
 function changeMaterial(m) { state.currentMaterial = m; applyMaterialEffect() }
 function updateColor(k, v) { state.COLORS[k] = v; re() }

@@ -24,6 +24,9 @@ export const fonts = [
   { value: 'Prompt', label: 'Prompt (ไทย โมเดิร์น)' },
   { value: 'Noto Sans Thai', label: 'Noto Sans Thai' },
   { value: 'Mitr', label: 'Mitr (ไทย เรียบ)' },
+  { value: 'Pridi', label: 'Pridi (ไทย มีหัว ทางการ)' },
+  { value: 'Taviraj', label: 'Taviraj (ไทย มีหัว อ่านชัด)' },
+  { value: 'Trirong', label: 'Trirong (ไทย มีหัว ป้าย/ประกาศ)' },
   { value: 'Arial', label: 'Arial (Latin)' },
   { value: 'Georgia', label: 'Georgia (Serif)' },
 ]

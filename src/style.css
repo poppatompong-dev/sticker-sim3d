@@ -29,10 +29,19 @@ body {
   cursor: grabbing;
 }
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
-.style-btn { transition: all 0.2s; }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.style-btn {
+  transition: all 0.2s;
+}
+
 .style-btn.active {
   border-color: #008542;
   background-color: #effcf5;
@@ -45,20 +54,82 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
   z-index: 10;
   font-weight: bold;
   font-size: 1.2rem;
   color: #333;
 }
 
-.range-sm { height: 4px; }
-.range-sm::-webkit-slider-thumb { width: 12px; height: 12px; }
+.range-sm {
+  height: 4px;
+}
+
+.range-sm::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+}
 
 @media print {
-  #main-ui { display: none !important; }
-  #export-modal { display: block !important; position: relative !important; background: white !important; z-index: 0 !important; padding: 0 !important; }
-  #export-modal > div { box-shadow: none !important; max-width: 100% !important; border: none !important; }
-  .no-print { display: none !important; }
-  body { background-color: white !important; overflow: auto !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body,
+  #app {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  #main-ui {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  #main-ui> :not(#export-modal) {
+    display: none !important;
+  }
+
+  #export-modal {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    background: white !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #print-area {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  #export-modal>div,
+  #print-area>div {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

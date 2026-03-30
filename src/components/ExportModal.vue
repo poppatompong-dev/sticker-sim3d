@@ -14,25 +14,48 @@
       <div class="p-6 flex flex-col gap-6 bg-gray-50 flex-1">
 
         <!-- Preview + Quick Info -->
-        <div class="grid grid-cols-5 gap-6">
-          <div class="col-span-2 bg-white rounded-lg p-4 border flex justify-center items-center">
-            <div class="w-full rounded p-3 flex justify-center items-center" :style="{ backgroundColor: state.cabinetColor }">
-              <img :src="previewSrc" class="max-w-full max-h-[320px] drop-shadow-lg" alt="Preview">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-8 grid grid-cols-2 gap-4">
+            <div class="bg-white rounded-lg p-4 border flex flex-col gap-2">
+              <div class="text-xs font-bold text-gray-700">ภาพสติกเกอร์</div>
+              <div class="flex-1 rounded px-2 py-1 flex justify-center items-center min-h-[340px]" :style="{ backgroundColor: state.cabinetColor }">
+                <img :src="previewSrc" class="max-w-full max-h-[320px] w-auto h-auto drop-shadow-lg scale-110" alt="Sticker Preview">
+              </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 border flex flex-col gap-2">
+              <div class="text-xs font-bold text-gray-700">ภาพตัวอย่างบนตู้จำลอง</div>
+              <div class="flex-1 rounded overflow-hidden bg-gradient-to-b from-sky-100 to-slate-100 flex justify-center items-center min-h-[340px] p-1">
+                <img v-if="modelPreviewSrc" :src="modelPreviewSrc" class="w-full h-[320px] object-contain scale-[1.55]" alt="Cabinet Mockup Preview">
+                <div v-else class="text-xs text-gray-400 py-10">ไม่พบภาพตู้จำลอง</div>
+              </div>
             </div>
           </div>
-          <div class="col-span-3 flex flex-col gap-3">
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-3">
+          <div class="col-span-4 flex flex-col gap-4">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center gap-3">
               <span class="text-2xl">🏷️</span>
               <div>
                 <span class="text-xs text-gray-500">ตู้หมายเลข</span>
-                <div class="text-2xl font-black text-red-600 tracking-wider">{{ state.customNum }}</div>
+                <div class="text-3xl font-black text-red-600 tracking-wider leading-none">{{ state.customNum }}</div>
               </div>
             </div>
-            <div class="bg-white rounded-lg border p-3 text-xs text-gray-700 grid grid-cols-2 gap-y-1.5 gap-x-4">
-              <span class="font-medium text-gray-500">รูปแบบ</span><span class="font-bold">{{ styleName }}</span>
-              <span class="font-medium text-gray-500">วัสดุ</span><span class="font-bold capitalize">{{ state.currentMaterial }}</span>
-              <span class="font-medium text-gray-500">ฟอนต์</span><span class="font-bold">{{ state.selectedFont }}</span>
-              <span class="font-medium text-gray-500">ข้อความหลัก</span><span class="font-bold">{{ state.customText }}</span>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="bg-white rounded-lg border p-3 flex flex-col gap-1 min-h-[72px]">
+                <span class="text-gray-500">รูปแบบ</span>
+                <span class="font-bold text-gray-800">{{ styleName }}</span>
+                <span class="font-mono text-[11px] text-gray-400">#{{ state.currentStyleId }}</span>
+              </div>
+              <div class="bg-white rounded-lg border p-3 flex flex-col gap-1 min-h-[72px]">
+                <span class="text-gray-500">ฟอนต์</span>
+                <span class="font-bold text-gray-800">{{ state.selectedFont }}</span>
+              </div>
+              <div class="bg-white rounded-lg border p-3 flex flex-col gap-1 min-h-[72px] col-span-2">
+                <span class="text-gray-500">ข้อความหลัก</span>
+                <span class="font-bold text-gray-800 leading-snug">{{ state.customText }}</span>
+              </div>
+              <div class="bg-white rounded-lg border p-3 flex flex-col gap-1 min-h-[88px] col-span-2">
+                <span class="text-gray-500">วัสดุ (ข้อเสนอแนะ)</span>
+                <span class="font-bold text-gray-800 leading-snug">{{ materialRecommendation }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -40,19 +63,27 @@
         <!-- A) Design Spec -->
         <section class="bg-white rounded-lg border p-5">
           <h3 class="font-bold text-blue-800 border-b-2 border-blue-800 pb-2 mb-4 text-sm">A) Design Specification</h3>
-          <div class="grid grid-cols-2 gap-6 text-xs text-gray-700">
-            <div>
-              <h4 class="font-bold text-gray-800 mb-2">ขนาด (Dimensions)</h4>
-              <table class="w-full text-left">
+          <div class="grid grid-cols-2 gap-4 text-xs text-gray-700">
+            <div class="rounded-lg bg-gray-50 border border-gray-100 p-4">
+              <h4 class="font-bold text-gray-800 mb-2">ขนาดและตำแหน่ง</h4>
+              <table class="w-full text-left text-[11px]">
                 <tbody>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">สติกเกอร์</td><td class="py-1 font-bold">2.2 × 3.1 ม. (1024×1433 px)</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">ตราสัญลักษณ์</td><td class="py-1 font-bold">Ø {{ (10 * state.scaleLogo).toFixed(1) }} ซม.</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">ข้อความหลัก</td><td class="py-1 font-bold">{{ (2.5 * state.scaleText).toFixed(1) }} ซม.</td></tr>
-                  <tr><td class="py-1 text-gray-500">หมายเลข</td><td class="py-1 font-bold">{{ (5.0 * state.scaleNum).toFixed(1) }} ซม.</td></tr>
+                  <tr class="border-b border-gray-100 text-gray-500">
+                    <td class="py-1 pr-2">องค์ประกอบ</td>
+                    <td class="py-1 pr-2">ขนาดอ้างอิง</td>
+                    <td class="py-1 pr-2">Scale</td>
+                    <td class="py-1">Offset</td>
+                  </tr>
+                  <tr v-for="item in placementRows" :key="item.key" class="border-b border-gray-100 align-top">
+                    <td class="py-1.5 pr-2 font-medium text-gray-700">{{ item.label }}</td>
+                    <td class="py-1.5 pr-2 font-mono text-gray-600">{{ item.sizeLabel }}</td>
+                    <td class="py-1.5 pr-2 font-mono text-gray-600">{{ item.scale.toFixed(2) }}</td>
+                    <td class="py-1.5 font-mono text-gray-600">{{ formatPoint(item.offset) }}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
-            <div>
+            <div class="rounded-lg bg-gray-50 border border-gray-100 p-4">
               <h4 class="font-bold text-gray-800 mb-2">🎨 รหัสสี</h4>
               <div class="flex flex-col gap-1.5">
                 <div v-for="c in colorSpec" :key="c.label" class="flex items-center gap-2">
@@ -64,72 +95,86 @@
               </div>
             </div>
           </div>
-          <div v-if="state.subTexts.some(s => s.text)" class="mt-4 text-xs">
+          <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 leading-relaxed">
+            <div class="font-bold mb-1">แนวทางพิจารณาประเภทวัสดุ</div>
+            <div>
+              ให้เลือกประเภทวัสดุโดยพิจารณา <span class="font-bold">ความคงทนในการใช้งานจริง</span> และ <span class="font-bold">ความชัดเจนในการมองเห็น/อ่านง่าย/สังเกตได้ง่าย</span> เป็นหลัก โดยค่าที่เลือกในระบบนี้เป็นข้อเสนอแนะของงานออกแบบเพื่อใช้ประกอบการตัดสินใจผลิต
+            </div>
+          </div>
+          <div v-if="renderElements.length" class="mt-4 text-xs">
+            <h4 class="font-bold text-gray-800 mb-1.5">Rendered elements (อ้างอิงผลิต)</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-[11px]">
+                <thead>
+                  <tr class="border-b border-gray-200 text-gray-500">
+                    <th class="py-1 pr-2">ชนิด</th>
+                    <th class="py-1 pr-2">ข้อมูล</th>
+                    <th class="py-1 pr-2">สี</th>
+                    <th class="py-1 pr-2">ขนาดจริง</th>
+                    <th class="py-1 pr-2">Anchor</th>
+                    <th class="py-1">Bounds</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(el, i) in renderElements" :key="i" class="border-b border-gray-100 align-top">
+                    <td class="py-1.5 pr-2 font-bold text-gray-700">{{ elementLabel(el.type) }}</td>
+                    <td class="py-1.5 pr-2">
+                      <div class="font-medium text-gray-800">{{ el.text || '—' }}</div>
+                      <div v-if="el.index !== undefined" class="text-gray-400">ลำดับ {{ el.index + 1 }}</div>
+                    </td>
+                    <td class="py-1.5 pr-2 font-mono text-gray-600">{{ el.color || '—' }}</td>
+                    <td class="py-1.5 pr-2 text-gray-600">{{ formatElementSize(el) }}</td>
+                    <td class="py-1.5 pr-2 font-mono text-gray-600">{{ formatPoint(el.anchor || el.center) }}</td>
+                    <td class="py-1.5 font-mono text-gray-600">{{ formatBounds(el.bounds) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div v-if="renderSubTextElements.length" class="mt-4 text-xs">
             <h4 class="font-bold text-gray-800 mb-1.5">ข้อความรอง</h4>
-            <div v-for="(st, i) in state.subTexts.filter(s => s.text)" :key="i" class="flex items-center gap-3 py-1 border-b border-gray-100">
+            <div v-for="(st, i) in renderSubTextElements" :key="i" class="flex items-center gap-3 py-1.5 border-b border-gray-100">
               <span class="text-gray-500 w-4">{{ i + 1 }}.</span>
               <span class="font-bold flex-1">{{ st.text }}</span>
-              <span class="text-gray-400">{{ st.fontSize }}px</span>
+              <span class="text-gray-400">{{ formatElementSize(st) }}</span>
               <div class="w-4 h-4 rounded border" :style="{ backgroundColor: st.color }"></div>
               <span class="font-mono text-gray-500">{{ st.color }}</span>
             </div>
           </div>
         </section>
 
-        <!-- B) Architectural Details -->
         <section class="bg-white rounded-lg border p-5">
-          <h3 class="font-bold text-blue-800 border-b-2 border-blue-800 pb-2 mb-4 text-sm">B) Architectural Details</h3>
-          <div class="text-xs text-gray-700 grid grid-cols-2 gap-6">
-            <div>
-              <h4 class="font-bold text-gray-800 mb-2">โครงสร้างและตำแหน่ง</h4>
+          <h3 class="font-bold text-blue-800 border-b-2 border-blue-800 pb-2 mb-4 text-sm">B) Current Control Values</h3>
+          <div class="grid grid-cols-2 gap-4 text-xs text-gray-700">
+            <div class="rounded-lg bg-gray-50 border border-gray-100 p-4">
+              <h4 class="font-bold text-gray-800 mb-2">ภาพรวมการ render</h4>
               <table class="w-full text-left">
                 <tbody>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">เสา</td><td class="py-1 font-bold">สูง 7.0 ม., Ø 18–22 ซม.</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">ตู้</td><td class="py-1 font-bold">2.6 × 3.6 × 1.1 ม.</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">จุดศูนย์กลางตู้</td><td class="py-1 font-bold">ความสูง {{ CAB_CENTER_M.toFixed(2) }} ม. จากพื้น</td></tr>
-                  <tr><td class="py-1 text-gray-500">ลำโพง</td><td class="py-1 font-bold">2 ตัว สูง 5.6 ม., กาง 150°</td></tr>
+                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">Canvas</td><td class="py-1 font-mono text-gray-700">{{ renderCanvasSpec.width }} × {{ renderCanvasSpec.height }} px</td></tr>
+                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">Safe area</td><td class="py-1 font-mono text-gray-700">{{ formatBounds(renderCanvasSpec.safeArea) }}</td></tr>
+                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">จำนวนองค์ประกอบ</td><td class="py-1 font-mono text-gray-700">{{ renderElements.length }}</td></tr>
+                  <tr><td class="py-1 text-gray-500">จำนวน shape</td><td class="py-1 font-mono text-gray-700">{{ renderShapes.length }}</td></tr>
                 </tbody>
               </table>
             </div>
-            <div>
-              <h4 class="font-bold text-gray-800 mb-2">สภาพแวดล้อม</h4>
-              <ul class="flex flex-col gap-1 text-gray-600">
-                <li>• ตู้ติดตั้งริมถนนหรือพื้นที่สาธารณะ</li>
-                <li>• ต้องมองเห็นหมายเลขจากระยะ 20–50 ม.</li>
-                <li>• สติกเกอร์ต้องทนแดด/ฝนได้</li>
-                <li>• ควรติดตั้งด้านที่มีผู้สัญจรมากที่สุด</li>
-              </ul>
+            <div class="rounded-lg bg-gray-50 border border-gray-100 p-4">
+              <h4 class="font-bold text-gray-800 mb-2">Template shapes</h4>
+              <div v-if="renderShapes.length" class="flex flex-col gap-1.5 text-[11px]">
+                <div v-for="(shape, i) in renderShapes" :key="i" class="border border-gray-100 rounded px-2 py-1.5">
+                  <div class="font-bold text-gray-700">{{ shape.type }}</div>
+                  <div class="font-mono text-gray-500">{{ formatBounds(shape.bounds) }}</div>
+                  <div class="font-mono text-gray-400">{{ shape.color }}</div>
+                </div>
+              </div>
+              <div v-else class="text-gray-400">ไม่มี shape พิเศษใน template นี้</div>
             </div>
           </div>
         </section>
 
-        <!-- C) Engineering Details -->
-        <section class="bg-white rounded-lg border p-5">
-          <h3 class="font-bold text-blue-800 border-b-2 border-blue-800 pb-2 mb-4 text-sm">C) Engineering Details</h3>
-          <div class="text-xs text-gray-700 grid grid-cols-2 gap-6">
-            <div>
-              <h4 class="font-bold text-gray-800 mb-2">การติดตั้ง</h4>
-              <table class="w-full text-left">
-                <tbody>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">แขนยึดตู้</td><td class="py-1 font-bold">0.36 × 0.28 × 1.1 ม. ที่ {{ (CAB_CENTER_M - 1.8 - 0.14).toFixed(2) }} ม.</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">สีตู้</td><td class="py-1 font-bold font-mono">{{ state.cabinetColor }}</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">วัสดุสติกเกอร์</td><td class="py-1 font-bold capitalize">{{ materialSuggestion }}</td></tr>
-                  <tr><td class="py-1 text-gray-500">สเกลอ้างอิง</td><td class="py-1 font-bold">1 หน่วย 3D = 0.583 ม.</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div>
-              <h4 class="font-bold text-gray-800 mb-2">พิกัดประกอบ (Three.js units)</h4>
-              <table class="w-full text-left">
-                <tbody>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">พื้น (Ground)</td><td class="py-1 font-mono">y = –6.0</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">เสา (Pole)</td><td class="py-1 font-mono">y = 0, h = 12</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">ตู้ (Cabinet)</td><td class="py-1 font-mono">y = {{ CAB_CENTER_Y_DISPLAY }}, z = 1.1</td></tr>
-                  <tr class="border-b border-gray-100"><td class="py-1 text-gray-500">สติกเกอร์</td><td class="py-1 font-mono">2.2 × 3.1, z = 0.558</td></tr>
-                  <tr><td class="py-1 text-gray-500">ลำโพง</td><td class="py-1 font-mono">y = 5.6, ∠150°</td></tr>
-                </tbody>
-              </table>
-            </div>
+        <section class="bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 text-xs text-amber-900 leading-relaxed">
+          <div class="font-bold mb-1">หมายเหตุ</div>
+          <div>
+            รายละเอียดต่าง ๆ ในเอกสารฉบับนี้อาจปรับเปลี่ยนได้ตามความเหมาะสม ทั้งนี้ต้องเป็นไปตามข้อกำหนดที่เกี่ยวข้อง และต้องได้รับความยินยอมจากเทศบาลก่อนดำเนินการ
           </div>
         </section>
       </div>
@@ -141,7 +186,7 @@
         <div class="flex gap-3">
           <button @click="copyJson" class="px-4 py-2.5 bg-blue-50 text-blue-700 text-sm font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition">📋 คัดลอก JSON</button>
           <button @click="$emit('close')" class="px-5 py-2.5 bg-gray-200 text-sm font-bold rounded-lg hover:bg-gray-300 transition">กลับไปแก้ไข</button>
-          <button @click="() => window.print()" class="px-5 py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg shadow-lg hover:bg-green-700 transition">🖨️ บันทึก PDF</button>
+          <button @click="handlePrint" class="px-5 py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg shadow-lg hover:bg-green-700 transition">🖨️ บันทึก PDF</button>
         </div>
       </div>
     </div>
@@ -151,28 +196,60 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { state, styles } from '../modules/state.js'
-import { vCanvas, renderTexture } from '../modules/texture.js'
-import { getRenderer, CAB_CENTER_M } from '../modules/scene.js'
+import { vCanvas, renderTexture, getRenderSpec } from '../modules/texture.js'
+import { getRenderer } from '../modules/scene.js'
 
 const props = defineProps({ show: Boolean })
 defineEmits(['close'])
 
 const copied = ref(false)
 const previewSrc = ref('')
+const modelPreviewSrc = ref('')
+const renderSpec = ref(null)
 
 watch(() => props.show, (visible) => {
   if (visible) {
-    renderTexture(state.currentStyleId, getRenderer())
+    renderSpec.value = renderTexture(state.currentStyleId, getRenderer()) ?? getRenderSpec()
     previewSrc.value = vCanvas.toDataURL()
+    const renderer = getRenderer()
+    modelPreviewSrc.value = renderer?.domElement?.toDataURL?.('image/png') ?? ''
   } else {
     previewSrc.value = ''
+    modelPreviewSrc.value = ''
+    renderSpec.value = null
   }
 })
 
-const CAB_CENTER_Y_DISPLAY = (-6 + 3.0 * (12 / 7) + 1.8).toFixed(2)
-
 const styleName = computed(() => styles.find(s => s.id === state.currentStyleId)?.name ?? '')
 const styleObj = computed(() => styles.find(s => s.id === state.currentStyleId))
+const renderCanvasSpec = computed(() => renderSpec.value?.canvas ?? { safeArea: { width: 0, height: 0 } })
+const renderControlSpec = computed(() => renderSpec.value?.controls ?? { offsets: {} })
+const renderElements = computed(() => renderSpec.value?.elements ?? [])
+const renderShapes = computed(() => renderSpec.value?.shapes ?? [])
+const renderSubTextElements = computed(() => renderElements.value.filter(el => el.type === 'subText'))
+const placementRows = computed(() => [
+  {
+    key: 'logo',
+    label: 'ตราสัญลักษณ์',
+    scale: renderControlSpec.value.scaleLogo ?? 0,
+    sizeLabel: `Ø ${(10 * (renderControlSpec.value.scaleLogo ?? 0)).toFixed(1)} ซม.`,
+    offset: renderControlSpec.value.offsets?.logo,
+  },
+  {
+    key: 'text',
+    label: 'ข้อความหลัก',
+    scale: renderControlSpec.value.scaleText ?? 0,
+    sizeLabel: `${(2.5 * (renderControlSpec.value.scaleText ?? 0)).toFixed(1)} ซม.`,
+    offset: renderControlSpec.value.offsets?.text,
+  },
+  {
+    key: 'num',
+    label: 'หมายเลขตู้',
+    scale: renderControlSpec.value.scaleNum ?? 0,
+    sizeLabel: `${(5.0 * (renderControlSpec.value.scaleNum ?? 0)).toFixed(1)} ซม.`,
+    offset: renderControlSpec.value.offsets?.num,
+  },
+])
 
 const colorSpec = computed(() => [
   { label: 'ข้อความหลัก', hex: state.COLORS.dark },
@@ -181,11 +258,10 @@ const colorSpec = computed(() => [
   { label: 'สีตู้', hex: state.cabinetColor },
 ])
 
-const materialSuggestion = computed(() => {
-  const m = state.currentMaterial
-  if (m === 'matte') return 'Matte vinyl — ทนแดด 3–5 ปี'
-  if (m === 'glossy') return 'Glossy vinyl — เงาสะท้อนแสง'
-  return 'Reflective vinyl — สะท้อนแสงกลางคืน'
+const materialRecommendation = computed(() => {
+  if (state.currentMaterial === 'matte') return 'ผิวด้าน — เหมาะเมื่อเน้นความทนทานและลดแสงสะท้อน'
+  if (state.currentMaterial === 'glossy') return 'ผิวมัน — เหมาะเมื่อเน้นความสดของสีและความเด่นชัดในระยะมองทั่วไป'
+  return 'สะท้อนแสง — เหมาะเมื่อเน้นการสังเกตเห็นง่ายและการอ่านชัดในสภาพแสงน้อย'
 })
 
 function hexToRgb(hex) {
@@ -195,7 +271,40 @@ function hexToRgb(hex) {
   return `rgb(${r}, ${g}, ${b})`
 }
 
+function formatPoint(point) {
+  if (!point) return '—'
+  return `x=${Number(point.x).toFixed(1)}, y=${Number(point.y).toFixed(1)}`
+}
+
+function formatBounds(bounds) {
+  if (!bounds) return '—'
+  return `x=${bounds.x}, y=${bounds.y}, w=${bounds.width}, h=${bounds.height}`
+}
+
+function formatElementSize(element) {
+  if (element?.requestedFontSizePx) {
+    return `${element.requestedFontSizePx}px → ${element.effectiveFontSizePx}px`
+  }
+  if (element?.requestedSizePx) {
+    return `${element.effectiveSizePx}px`
+  }
+  if (element?.radiusPx) {
+    return `r=${element.radiusPx}px`
+  }
+  return '—'
+}
+
+function elementLabel(type) {
+  if (type === 'logo') return 'Logo'
+  if (type === 'mainText') return 'Main text'
+  if (type === 'subText') return 'Sub text'
+  if (type === 'number') return 'Number'
+  if (type === 'curvedText') return 'Curved text'
+  return type
+}
+
 function buildJsonSpec() {
+  const snapshot = renderSpec.value ?? getRenderSpec()
   return {
     project: 'ติดตั้งสติกเกอร์ตู้',
     cabinetNumber: state.customNum,
@@ -205,14 +314,19 @@ function buildJsonSpec() {
       material: state.currentMaterial,
       font: state.selectedFont,
       mainText: state.customText,
-      subTexts: state.subTexts.filter(s => s.text).map(s => ({ text: s.text, fontSize: s.fontSize, color: s.color })),
+      subTexts: renderSubTextElements.value.map(s => ({
+        text: s.text,
+        color: s.color,
+        requestedFontSizePx: s.requestedFontSizePx,
+        effectiveFontSizePx: s.effectiveFontSizePx,
+        anchor: s.anchor,
+        bounds: s.bounds,
+      })),
     },
     dimensions: {
       stickerM: '2.2 × 3.1',
       stickerPx: '1024 × 1433',
-      logoDiameterCm: +(10 * state.scaleLogo).toFixed(1),
-      textHeightCm: +(2.5 * state.scaleText).toFixed(1),
-      numberHeightCm: +(5.0 * state.scaleNum).toFixed(1),
+      safeAreaPx: renderCanvasSpec.value.safeArea,
     },
     colors: {
       mainText: state.COLORS.dark,
@@ -220,33 +334,41 @@ function buildJsonSpec() {
       accent: state.COLORS.green,
       cabinet: state.cabinetColor,
     },
-    architecture: {
-      poleHeightM: 7.0,
-      poleDiameterCm: '18–22',
-      cabinetM: '2.6 × 3.6 × 1.1',
-      cabinetCenterHeightM: +CAB_CENTER_M.toFixed(2),
-      speakerHeightM: 5.6,
-      speakerSpreadDeg: 150,
+    productionLayout: {
+      controlSnapshot: snapshot?.controls ?? null,
+      canvasSnapshot: snapshot?.canvas ?? null,
+      elements: snapshot?.elements ?? [],
+      shapes: snapshot?.shapes ?? [],
     },
-    engineering: {
-      bracketM: '0.36 × 0.28 × 1.1',
-      bracketHeightM: +(CAB_CENTER_M - 1.8 - 0.14).toFixed(2),
-      scaleRef: '1 unit = 0.583 m',
-      coordinates: {
-        ground: 'y = -6.0',
-        pole: 'y = 0, h = 12',
-        cabinet: 'y = 4.4, z = 1.1',
-        sticker: '2.2 × 3.1, z = 0.558',
-        speakers: 'y = 5.6, ∠150°',
-      },
-    },
+    renderSnapshot: snapshot,
   }
 }
 
 async function copyJson() {
   const json = JSON.stringify(buildJsonSpec(), null, 2)
-  await navigator.clipboard.writeText(json)
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 2500)
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(json)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = json
+      textarea.setAttribute('readonly', '')
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2500)
+  } catch (error) {
+    console.error('Failed to copy JSON spec:', error)
+    alert('ไม่สามารถคัดลอก JSON ได้ กรุณาลองใหม่อีกครั้ง')
+  }
+}
+
+function handlePrint() {
+  window.print()
 }
 </script>

@@ -79,11 +79,65 @@
     <div class="flex-1 min-h-0 flex flex-col relative bg-gray-100">
       <div class="px-4 py-2 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
         <div class="text-sm font-bold text-gray-800">3D Mockup <span class="text-xs font-normal text-gray-400 ml-1">Canvas2D + Three.js</span></div>
-        <div class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">🖱️ ลาก / 📜 ซูม</div>
+        <div class="flex items-center gap-2">
+          <button
+            @click="debugOpen = !debugOpen"
+            class="text-xs font-bold px-2 py-1 rounded-full border transition"
+            :class="debugOpen ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'"
+          >{{ debugOpen ? 'ซ่อน Debug' : 'แสดง Debug' }}</button>
+          <div class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">🖱️ ลาก / 📜 ซูม</div>
+        </div>
       </div>
       <div class="relative flex-1 min-h-0">
         <div id="loading">กำลังโหลดโมเดล 3 มิติ...</div>
         <div ref="canvasContainer" class="canvas-container absolute inset-0"></div>
+        <div v-if="debugOpen" class="absolute left-3 bottom-3 w-[360px] max-w-[calc(100%-24px)] bg-white/92 backdrop-blur rounded-xl shadow-lg border border-gray-200 p-3 text-[11px] text-gray-700">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-bold text-gray-800">Debug Overlay</div>
+            <div class="font-mono text-[10px] text-gray-400">template #{{ state.currentStyleId }}</div>
+          </div>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1 mb-2">
+            <div><span class="text-gray-400">แบบ</span> <span class="font-semibold text-gray-800">{{ currentStyleLabel }}</span></div>
+            <div><span class="text-gray-400">ฟอนต์</span> <span class="font-semibold text-gray-800">{{ state.selectedFont }}</span></div>
+            <div><span class="text-gray-400">วัสดุ</span> <span class="font-semibold text-gray-800 capitalize">{{ state.currentMaterial }}</span></div>
+            <div><span class="text-gray-400">Render items</span> <span class="font-semibold text-gray-800">{{ debugElements.length }}</span></div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <div class="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1">
+              <div class="text-[10px] text-gray-400">Logo</div>
+              <div class="font-mono text-gray-800">{{ state.scaleLogo.toFixed(2) }}</div>
+              <div class="font-mono text-[10px] text-gray-500">{{ formatOffset(state.offsets.logo) }}</div>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1">
+              <div class="text-[10px] text-gray-400">Text</div>
+              <div class="font-mono text-gray-800">{{ state.scaleText.toFixed(2) }}</div>
+              <div class="font-mono text-[10px] text-gray-500">{{ formatOffset(state.offsets.text) }}</div>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1">
+              <div class="text-[10px] text-gray-400">Number</div>
+              <div class="font-mono text-gray-800">{{ state.scaleNum.toFixed(2) }}</div>
+              <div class="font-mono text-[10px] text-gray-500">{{ formatOffset(state.offsets.num) }}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 mb-2">
+            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded border border-gray-300" :style="{ backgroundColor: state.COLORS.dark }"></span><span class="font-mono text-[10px]">{{ state.COLORS.dark }}</span></div>
+            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded border border-gray-300" :style="{ backgroundColor: state.COLORS.red }"></span><span class="font-mono text-[10px]">{{ state.COLORS.red }}</span></div>
+            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded border border-gray-300" :style="{ backgroundColor: state.COLORS.green }"></span><span class="font-mono text-[10px]">{{ state.COLORS.green }}</span></div>
+          </div>
+          <div class="border-t border-gray-200 pt-2 space-y-1">
+            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Render summary</div>
+            <div v-for="(item, idx) in debugElements" :key="idx" class="flex items-start justify-between gap-2 rounded-md bg-gray-50 px-2 py-1 border border-gray-100">
+              <div class="min-w-0">
+                <div class="font-semibold text-gray-800 truncate">{{ debugTypeLabel(item.type) }} <span class="text-gray-400">{{ item.text || '' }}</span></div>
+                <div class="font-mono text-[10px] text-gray-500">{{ debugAnchor(item) }}</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="font-mono text-[10px] text-gray-700">{{ debugFont(item) }}</div>
+                <div class="font-mono text-[10px] text-gray-400">{{ item.color || '—' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg shadow-md border border-gray-200 text-center pointer-events-none">
           <div class="text-xs font-bold text-[#008542]">ตู้หมายเลข</div>
           <div class="text-2xl font-black text-red-600 tracking-wider leading-none">{{ state.customNum }}</div>
@@ -96,18 +150,43 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { initScene, getRenderer, switchViewMode, setHumanVisible, setGroundVisible } from '../modules/scene.js'
-import { renderTexture, setLogoImage } from '../modules/texture.js'
+import { renderTexture, setLogoImage, getRenderSpec } from '../modules/texture.js'
 import { state, styles } from '../modules/state.js'
 
 const canvasContainer = ref(null)
 const templatePanelOpen = ref(false)
 const hoveredStyle = ref(null)
 const tooltipPos = ref({})
+const debugOpen = ref(true)
 
 const currentStyleLabel = computed(() => {
   const s = styles.find(s => s.id === state.currentStyleId)
   return s ? s.name : ''
 })
+
+const debugRenderSpec = computed(() => {
+  state.currentStyleId
+  state.selectedFont
+  state.currentMaterial
+  state.customText
+  state.customNum
+  state.scaleLogo
+  state.scaleText
+  state.scaleNum
+  state.COLORS.dark
+  state.COLORS.red
+  state.COLORS.green
+  state.offsets.logo.x
+  state.offsets.logo.y
+  state.offsets.text.x
+  state.offsets.text.y
+  state.offsets.num.x
+  state.offsets.num.y
+  state.subTexts.map(s => `${s.text}|${s.fontSize}|${s.color}`).join('||')
+  return getRenderSpec() ?? { elements: [] }
+})
+
+const debugElements = computed(() => (debugRenderSpec.value?.elements ?? []).slice(0, 5))
 
 // Color legend: #22c55e=logo(green) #6b7280=text(gray) #ef4444=number(red) #008542=accent #b0b5b9=cabinet
 const styleOutlines = {
@@ -145,6 +224,30 @@ function showTooltip(event, style) {
     transform: 'translateY(-100%)',
   }
   hoveredStyle.value = style
+}
+
+function formatOffset(offset) {
+  return `x=${offset.x}, y=${offset.y}`
+}
+
+function debugTypeLabel(type) {
+  if (type === 'mainText') return 'Text'
+  if (type === 'subText') return 'Sub'
+  if (type === 'number') return 'No.'
+  if (type === 'logo') return 'Logo'
+  if (type === 'curvedText') return 'Curved'
+  return type
+}
+
+function debugAnchor(item) {
+  const point = item.anchor || item.center
+  if (!point) return '—'
+  return `x=${Number(point.x).toFixed(1)}, y=${Number(point.y).toFixed(1)}`
+}
+
+function debugFont(item) {
+  if (!item.requestedFontSizePx) return '—'
+  return `${item.effectiveFontSizePx}px`
 }
 
 const viewModes = [
